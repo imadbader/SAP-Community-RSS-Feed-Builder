@@ -5,7 +5,7 @@
 ## Live App
 
 Access the app here:
-[https://imadbader.github.io/SAP-Community-RSS-Feed-Builder/](https://imadbader.github.io/SAP-Community-RSS-Feed-Builder/)
+<a href="https://imadbader.github.io/SAP-Community-RSS-Feed-Builder/" target="_blank">https://imadbader.github.io/SAP-Community-RSS-Feed-Builder/</a>
 
 A zero-dependency, single-file web tool for **SAP Digital Solution Advisors, BTP practitioners, and
 SAP Community members** to instantly generate, save, and share web and RSS feed URLs for
