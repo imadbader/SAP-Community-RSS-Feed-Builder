@@ -1485,7 +1485,7 @@
           const boardId = parts[1];
           const pageSfx = parts[2] || 'bg-p';
           return [
-            { label: '🌐 Web — Board Page', type: 'web', url: `${BASE}/${urlSlug}/${pageSfx}/${boardId}` },
+            { label: '🌐 Web — Board Page', type: 'web', url: `${BASE}/${urlSlug}/${pageSfx}` },
             { label: '📡 RSS — Board Feed', type: 'rss', url: `${BASE_COMMUNITY}/rss/board?board.id=${boardId}` },
           ];
         }
