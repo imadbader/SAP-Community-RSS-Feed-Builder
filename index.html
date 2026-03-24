@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAP Community Feed Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --sap-blue-1:  #0057D2;
+      --sap-blue-2:  #0070F2;
+      --sap-blue-3:  #5BA5F5;
+      --sap-blue-4:  #A9D2FB;
+      --sap-blue-5:  #D1E8FF;
+      --sap-gold:    #F0AB00;
+      --sap-teal:    #0E9981;
+      --sap-indigo:  #5C3EBC;
+      --sap-black:   #1D2D3E;
+      --sap-shell:   #354A5E;
+      --sap-neutral: #F5F6F7;
+      --sap-border:  #D9D9D9;
+      --sap-text:    #32363A;
+      --sap-subtle:  #6A6D70;
+      --font-main:   Arial, sans-serif;
+      --font-mono:   'IBM Plex Mono', 'Courier New', monospace;
+      --radius:      6px;
+      --shadow-card: 0 2px 12px rgba(0,80,160,0.10);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-main); background: var(--sap-neutral); color: var(--sap-text); min-height: 100vh; font-size: 14px; }
+
+    /* Shell */
+    .shell-bar { background: var(--sap-shell); color: #fff; display: flex; align-items: center; gap: 12px; padding: 0 24px; height: 44px; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 6px rgba(0,0,0,0.18); }
+    .shell-logo-box { background: var(--sap-gold); color: var(--sap-black); font-weight: 800; font-size: 12px; padding: 2px 7px; border-radius: 3px; letter-spacing: .5px; }
+    .shell-title { font-size: 15px; font-weight: 700; }
+    .shell-sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-left: 4px; }
+    .shell-badge { margin-left: auto; background: var(--sap-blue-2); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 12px; }
+
+    /* Page */
+    .page { max-width: 1100px; margin: 0 auto; padding: 28px 20px 80px; }
+    .page-header { margin-bottom: 22px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; color: var(--sap-black); }
+    .page-header p { font-size: 13px; color: var(--sap-subtle); margin-top: 5px; }
+
+    /* Tabs */
+    .tab-bar { display: flex; border-bottom: 2px solid var(--sap-border); margin-bottom: 20px; }
+    .tab-btn { background: none; border: none; padding: 9px 18px; font-family: var(--font-main); font-size: 13px; font-weight: 600; color: var(--sap-subtle); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s; }
+    .tab-btn.active { color: var(--sap-blue-2); border-bottom-color: var(--sap-blue-2); }
+    .tab-btn:hover:not(.active) { color: var(--sap-text); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Cards */
+    .card { background: #fff; border: 1px solid var(--sap-border); border-radius: var(--radius); box-shadow: var(--shadow-card); padding: 20px; margin-bottom: 16px; }
+    .card-title { font-size: 12px; font-weight: 700; color: var(--sap-shell); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .card-title::before { content: ''; display: inline-block; width: 3px; height: 13px; background: var(--sap-blue-2); border-radius: 2px; }
+
+    /* Form */
+    .form-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 14px; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+    label { font-size: 11px; font-weight: 700; color: var(--sap-shell); letter-spacing: .3px; text-transform: uppercase; }
+    input[type="text"], select { border: 1px solid var(--sap-border); border-radius: var(--radius); padding: 7px 10px; font-family: var(--font-main); font-size: 13px; color: var(--sap-text); background: #fff; outline: none; transition: border-color .15s, box-shadow .15s; height: 34px; }
+    input[type="text"]:focus, select:focus { border-color: var(--sap-blue-2); box-shadow: 0 0 0 2px rgba(0,112,242,0.15); }
+    input[type="text"]::placeholder { color: #b0b5ba; }
+
+    /* Buttons */
+    .btn { height: 34px; padding: 0 16px; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background .15s, transform .08s; white-space: nowrap; }
+    .btn-primary { background: var(--sap-blue-2); color: #fff; }
+    .btn-primary:hover { background: var(--sap-blue-1); }
+    .btn-ghost { background: var(--sap-neutral); color: var(--sap-text); border: 1px solid var(--sap-border); }
+    .btn-ghost:hover { background: var(--sap-blue-5); border-color: var(--sap-blue-3); }
+    .btn-sm { height: 28px; padding: 0 11px; font-size: 12px; }
+    .btn-icon { width: 26px; height: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius); border: 1px solid var(--sap-border); background: var(--sap-neutral); cursor: pointer; transition: background .15s; font-size: 12px; }
+    .btn-icon:hover { background: var(--sap-blue-5); }
+
+    /* URL Output */
+    .url-outputs { display: flex; flex-direction: column; gap: 10px; }
+    .url-block { border: 1px solid var(--sap-border); border-radius: var(--radius); overflow: hidden; animation: fadeIn .2s ease; }
+    .url-block-warn     { border-color: #F0AB00; }
+    .url-block-accurate { border-color: var(--sap-teal); }
+    .badge-warn     { background: #FFF3D6; color: #805C00; }
+    .badge-accurate { background: #EAF7F1; color: #0E7A58; font-weight:700; }
+    .url-warning-bar { background: #FFFAED; border-bottom: 1px solid #F0E0A0; padding: 7px 12px; font-size: 11.5px; color: #6B4A00; line-height: 1.5; }
+    .url-note-bar    { background: #EAF7F1; border-bottom: 1px solid #B2E0D2; padding: 7px 12px; font-size: 11.5px; color: #0A5C42; line-height: 1.5; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+    .url-block-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: var(--sap-neutral); border-bottom: 1px solid var(--sap-border); }
+    .url-type-badge { font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; }
+    .badge-web { background: var(--sap-blue-5); color: var(--sap-blue-1); }
+    .badge-rss { background: #FFF3D6; color: #805C00; }
+    .url-block-body { padding: 9px 12px; display: flex; align-items: center; gap: 8px; background: #fff; }
+    .url-text { flex: 1; font-family: var(--font-mono); font-size: 11.5px; color: var(--sap-text); word-break: break-all; line-height: 1.5; }
+    .url-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .info-box { background: var(--sap-blue-5); border-left: 3px solid var(--sap-blue-2); border-radius: 0 var(--radius) var(--radius) 0; padding: 9px 13px; font-size: 12px; color: var(--sap-blue-1); margin-bottom: 14px; }
+
+    /* Toast */
+    .copied-toast { position: fixed; bottom: 20px; right: 20px; background: var(--sap-teal); color: #fff; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: var(--radius); box-shadow: 0 4px 16px rgba(0,0,0,.18); opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .2s, transform .2s; z-index: 9999; }
+    .copied-toast.show { opacity: 1; transform: none; }
+
+    /* ═══ TAG BROWSER ═══ */
+    .tag-browser-controls { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+    .tag-search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .tag-search-wrap input { width: 100%; padding-left: 28px; }
+    .tag-search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--sap-subtle); font-size: 12px; pointer-events: none; }
+    .tag-count-badge { font-size: 11px; color: var(--sap-subtle); white-space: nowrap; background: var(--sap-neutral); border: 1px solid var(--sap-border); border-radius: 10px; padding: 2px 9px; }
+
+    .cat-filter-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .cat-pill { background: var(--sap-neutral); border: 1px solid var(--sap-border); border-radius: 14px; padding: 3px 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .12s; color: var(--sap-subtle); white-space: nowrap; }
+    .cat-pill:hover { background: var(--sap-blue-5); border-color: var(--sap-blue-3); color: var(--sap-blue-1); }
+    .cat-pill.active { background: var(--sap-blue-2); color: #fff; border-color: var(--sap-blue-1); }
+
+    .tag-grid-wrap { max-height: 380px; overflow-y: auto; border: 1px solid var(--sap-border); border-radius: var(--radius); background: #fff; }
+    .tag-grid-wrap::-webkit-scrollbar { width: 6px; }
+    .tag-grid-wrap::-webkit-scrollbar-thumb { background: var(--sap-blue-4); border-radius: 3px; }
+
+    .tag-cat-header { position: sticky; top: 0; background: var(--sap-shell); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; padding: 6px 14px; z-index: 10; display: flex; align-items: center; gap: 6px; }
+    .cat-count { background: rgba(255,255,255,0.2); border-radius: 8px; padding: 1px 7px; font-size: 10px; }
+
+    .tag-chip-row { display: flex; flex-wrap: wrap; gap: 5px; padding: 9px 11px; border-bottom: 1px solid var(--sap-border); }
+    .tag-chip-row:last-child { border-bottom: none; }
+
+    .t-chip { background: var(--sap-neutral); border: 1px solid var(--sap-border); border-radius: 12px; padding: 3px 10px; font-size: 11.5px; cursor: pointer; transition: all .1s; color: var(--sap-text); white-space: nowrap; line-height: 1.4; user-select: none; }
+    .t-chip:hover { background: var(--sap-blue-5); border-color: var(--sap-blue-3); color: var(--sap-blue-1); }
+    .t-chip.selected { background: var(--sap-blue-2); color: #fff; border-color: var(--sap-blue-1); }
+
+    .no-results { text-align: center; padding: 30px; color: var(--sap-subtle); font-size: 13px; }
+
+    /* Saved */
+    .feed-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .feed-table th { text-align: left; padding: 7px 10px; font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--sap-subtle); background: var(--sap-neutral); border-bottom: 1px solid var(--sap-border); }
+    .feed-table td { padding: 8px 10px; border-bottom: 1px solid var(--sap-border); vertical-align: middle; }
+    .feed-table tr:last-child td { border-bottom: none; }
+    .feed-table tr:hover td { background: var(--sap-blue-5); }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+    .pill-blue { background: var(--sap-blue-5); color: var(--sap-blue-1); }
+    .empty-state { text-align: center; padding: 36px 20px; color: var(--sap-subtle); font-size: 13px; }
+    .empty-state .icon { font-size: 28px; display: block; margin-bottom: 8px; }
+
+    /* Help */
+    .help-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .help-card { background: var(--sap-neutral); border: 1px solid var(--sap-border); border-radius: var(--radius); padding: 12px 14px; }
+    .help-card h4 { font-size: 12px; font-weight: 700; margin-bottom: 5px; color: var(--sap-shell); }
+    .help-card p { font-size: 11.5px; color: var(--sap-subtle); line-height: 1.6; }
+    .help-card code { display: inline-block; word-break: break-all; overflow-wrap: anywhere; white-space: normal; max-width: 100%; }
+    code { font-family: var(--font-mono); background: rgba(0,112,242,0.08); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+    .export-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="shell-bar">
+  <span class="shell-logo-box">SAP</span>
+  <span class="shell-title">Community Feed Builder</span>
+  <span class="shell-sub">/ BTP Advisor Tools</span>
+  <span class="shell-badge">v2.0</span>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <h1>SAP Community RSS Feed Builder</h1>
+    <p>Generate web and RSS feed URLs for <strong>community.sap.com</strong>. Browse all SAP managed tags by category, search, and click to prefill.</p>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('builder',this)">🔧 Feed Builder</button>
+    <button class="tab-btn" onclick="switchTab('saved',this)">📌 Saved Feeds</button>
+    <button class="tab-btn" onclick="switchTab('export',this)">📤 Export</button>
+    <button class="tab-btn" onclick="switchTab('help',this)">❓ URL Reference</button>
+  </div>
+
+  <!-- BUILDER -->
+  <div id="tab-builder" class="tab-panel active">
+
+    <div class="card">
+      <div class="card-title">Build a Feed URL</div>
+      <div class="form-row">
+        <div class="form-group" style="max-width:190px">
+          <label for="feedType">Feed Type</label>
+          <select id="feedType" onchange="onTypeChange()">
+            <option value="tag">🏷️ Tag</option>
+            <option value="board">📋 Board / Blog Area</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="feedInput" id="inputLabel">Tag Name / Slug</label>
+          <input type="text" id="feedInput" placeholder="e.g. sap-btp  — or click a tag below" oninput="generateURLs(); clearChipSelection()" />
+          <select id="boardSelect" style="display:none" onchange="onBoardSelect()">
+            <option value="">— Select a board —</option>
+
+            <optgroup label="📰 Technology Blog Posts">
+              <option value="technology-blog-posts-by-sap|technology-blog-postsbysa-board|bg-p">Technology Blog Posts by SAP</option>
+              <option value="technology-blog-posts-by-members|technology-blog-members|bg-p">Technology Blog Posts by Members</option>
+            </optgroup>
+
+            <optgroup label="🔗 Integration">
+              <option value="integration-blog-posts|integrationblog-board|bg-p">Integration — Blog Posts</option>
+              <option value="integration-discussions|integrationforum-board|bd-p">Integration — Discussions</option>
+            </optgroup>
+
+            <optgroup label="☁️ Application Development">
+              <option value="application-development-blog-posts|application-developmentblog-board|bg-p">Application Development — Blog Posts</option>
+              <option value="application-development-and-automation-discussions|application-developmentforum-board|bd-p">Application Development — Discussions</option>
+            </optgroup>
+
+            <optgroup label="🔵 ABAP">
+              <option value="abap-cloud-blog-posts|abap-cloudblog-board|bg-p">ABAP Cloud — Blog Posts</option>
+              <option value="abap-cloud-forum|abap-cloudforum-board|bd-p">ABAP Cloud — Forum</option>
+            </optgroup>
+
+            <optgroup label="🤖 Artificial Intelligence">
+              <option value="artificial-intelligence-and-machine-learning|artificial-intelligenceblog-board|bg-p">AI &amp; Machine Learning — Blog Posts</option>
+              <option value="artificial-intelligence-and-machine-learning-discussions|artificial-intelligenceforum-board|bd-p">AI &amp; Machine Learning — Discussions</option>
+            </optgroup>
+
+            <optgroup label="🏢 Enterprise Architecture">
+              <option value="enterprise-architecture-blog-posts|Enterprise-Architectureblog-board|bg-p">Enterprise Architecture — Blog Posts</option>
+              <option value="enterprise-architecture-discussions|Enterprise-Architectureforum-board|bd-p">Enterprise Architecture — Discussions</option>
+            </optgroup>
+
+            <optgroup label="📊 Data &amp; Analytics">
+              <option value="data-and-analytics-blog-posts|data-analyticsblog-board|bg-p">Data &amp; Analytics — Blog Posts</option>
+            </optgroup>
+
+            <optgroup label="🏭 Enterprise Resource Planning">
+              <option value="enterprise-resource-planning-blog-posts|enterprise-resource-planningblog-board|bg-p">ERP — Blog Posts</option>
+              <option value="enterprise-resource-planning-discussions|enterprise-resource-planningforum-board|bd-p">ERP — Discussions</option>
+              <option value="enterprise-resource-planning-q-a|erp-questions|qa-p">ERP — Q&amp;A</option>
+            </optgroup>
+
+            <optgroup label="👥 Human Capital Management">
+              <option value="human-capital-management-blog-posts|human-capital-managementblog-board|bg-p">HCM — Blog Posts</option>
+              <option value="human-capital-management-discussions|human-capital-managementforum-board|bd-p">HCM — Discussions</option>
+            </optgroup>
+
+            <optgroup label="🛒 CRM &amp; Customer Experience">
+              <option value="crm-and-cx-blog-posts|crm-and-cxblog-board|bg-p">CRM &amp; CX — Blog Posts</option>
+              <option value="crm-and-cx-discussions|crm-and-cxforum-board|bd-p">CRM &amp; CX — Discussions</option>
+            </optgroup>
+
+            <optgroup label="💰 Spend Management">
+              <option value="spend-management-blog-posts-by-sap|spend-management-blog-sap|bg-p">Spend Management — Blog Posts by SAP</option>
+              <option value="spend-management-blog-posts-by-members|spend-management-blog-members|bg-p">Spend Management — Blog Posts by Members</option>
+            </optgroup>
+
+            <optgroup label="🌐 Technology Q&amp;A">
+              <option value="technology-q-a|technology-questions|qa-p">Technology — Q&amp;A</option>
+            </optgroup>
+
+            <optgroup label="🎪 Events &amp; Community">
+              <option value="sap-codejam-blog-posts|code-jamblog-board|bg-p">SAP CodeJam — Blog Posts</option>
+              <option value="sap-codejam|codejam-events|eb-p">SAP CodeJam — Events</option>
+              <option value="sap-community-calls|community-calls|eb-p">SAP Community Calls</option>
+              <option value="what-s-new|whatsnewblog-board|bg-p">What's New</option>
+              <option value="welcome-corner-blog-posts|welcome-cornerblog-board|bg-p">Welcome Corner — Blog Posts</option>
+              <option value="coffee-corner-discussions|coffeecornerforum-board|bd-p">Coffee Corner — Discussions</option>
+            </optgroup>
+          </select>
+        </div>
+
+      </div>
+
+      <div id="emptyHint" class="info-box">
+        💡 Choose <strong>Tag</strong> and click any tag below to generate feed URLs, or choose <strong>Board / Blog Area</strong> and select a board from the dropdown.
+      </div>
+
+      <div id="outputCard" style="display:none">
+        <div class="url-outputs" id="urlOutputs"></div>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="saveCurrentFeed()">📌 Save Feed</button>
+          <button class="btn btn-ghost" onclick="copyAll()">📋 Copy All URLs</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAG BROWSER -->
+    <div class="card">
+      <div class="card-title">All SAP Managed Tags — Click to Prefill</div>
+
+      <div class="tag-browser-controls">
+        <div class="tag-search-wrap">
+          <span class="tag-search-icon">🔍</span>
+          <input type="text" id="tagSearch" placeholder="Search all tags… (e.g. HANA, Fiori, Workflow, CAP)" oninput="filterTags()" />
+        </div>
+        <span class="tag-count-badge" id="tagCountBadge">Loading…</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearTagSearch()">✕ Clear</button>
+      </div>
+
+      <div class="cat-filter-row" id="catFilterRow"></div>
+      <div class="tag-grid-wrap" id="tagGrid"></div>
+    </div>
+
+  </div>
+
+  <!-- SAVED -->
+  <div id="tab-saved" class="tab-panel">
+    <div class="card">
+      <div class="card-title">Saved Feeds</div>
+      <div id="savedFeedsContainer"><div class="empty-state"><span class="icon">📭</span>No feeds saved yet.</div></div>
+      <div style="margin-top:12px;"><button class="btn btn-ghost btn-sm" onclick="clearSaved()">🗑️ Clear All</button></div>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div id="tab-export" class="tab-panel">
+    <div class="card">
+      <div class="card-title">Export Saved Feeds</div>
+      <p style="font-size:13px;color:var(--sap-subtle)">Export your collection for team sharing or RSS reader import.</p>
+      <div class="export-row">
+        <button class="btn btn-primary" onclick="exportJSON()">⬇️ JSON</button>
+        <button class="btn btn-ghost" onclick="exportCSV()">📊 CSV</button>
+        <button class="btn btn-ghost" onclick="exportOPML()">📡 OPML (RSS Readers)</button>
+        <button class="btn btn-ghost" onclick="exportMarkdown()">📝 Markdown</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Import Feeds</div>
+      <div class="form-row">
+        <div class="form-group"><label>Paste JSON</label><input type="text" id="importInput" placeholder="Paste exported JSON array" /></div>
+        <button class="btn btn-primary" onclick="importJSON()">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HELP -->
+  <div id="tab-help" class="tab-panel">
+    <div class="card">
+      <div class="card-title">URL Pattern Reference</div>
+
+      <!-- Tag RSS limitation callout -->
+      <div style="background:#FFFAED;border:1px solid #F0E0A0;border-left:4px solid #F0AB00;border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:13px;color:#6B4A00;line-height:1.6;">
+        <strong>⚠️ Known limitation: SAP native tag RSS feeds are imprecise</strong><br/>
+        The SAP Community platform's <code>/rss/search?q=tags:[name]</code> endpoint performs a loose keyword search — not a strict managed tag filter.
+        Posts may appear in the feed without having the tag, and posts with the tag may be missing.
+        For exact tag filtering, the open-source <strong>rss-scn.marianzeis.de</strong> API can be used manually — but requires the tag title to exactly match the SAP Community managed tag registry. See the URL Reference tab for the format.
+      </div>
+
+      <div class="help-grid">
+        <div class="help-card" style="border-color:#F0AB00">
+          <h4>⚠️ Tag RSS — SAP Native (imprecise)</h4>
+          <p>Keyword search, not strict tag match:<br/><code>/khhcw49343/rss/search?q=tags:[Tag%20Name]</code><br/><br/>Example:<br/><code>…?q=tags:SAP%20AI%20Core</code></p>
+        </div>
+        <div class="help-card" style="border-color:var(--sap-teal)">
+          <h4>✅ Tag RSS — Accurate (third-party, manual)</h4>
+          <p>For exact managed tag filtering, use <strong>rss-scn.marianzeis.de</strong> — but only with tag titles verified against the SAP Community managed tag registry, as the API does a strict exact-match lookup.<br/><br/><code>rss-scn.marianzeis.de/api/messages?conversation.style=blog&amp;managedTag.title=[Exact Tag Title]&amp;feeds.replies=false</code><br/><br/><code>conversation.style</code> is required (<code>blog</code> or <code>qanda</code>).</p>
+        </div>
+        <div class="help-card"><h4>🏷️ Tag — Web Page</h4><p><code>/t5/tag/[Tag%20Name]/tg-p</code></p></div>
+        <div class="help-card"><h4>📋 General RSS — All Content</h4><p><code>/khhcw49343/rss/Community</code></p></div>
+        <div class="help-card"><h4>📋 General RSS — By Type</h4><p><code>…?interaction.style=blog</code><br/><code>…?interaction.style=qanda</code><br/><code>…?interaction.style=forum</code><br/><code>…?interaction.style=occasion</code><br/><code>…?interaction.style=tkb</code></p></div>
+        <div class="help-card"><h4>📊 RSS — Count &amp; Replies</h4><p>Add <code>&amp;count=N</code> and <code>&amp;feeds.replies=true</code><br/><br/>Example:<br/><code>…?interaction.style=blog&amp;feeds.replies=true&amp;count=42</code></p></div>
+        <div class="help-card"><h4>🔑 Community ID</h4><p>SAP Community ID: <code>khhcw49343</code><br/><code>community.sap.com/khhcw49343/rss/…</code></p></div>
+        <div class="help-card"><h4>👤 User — Web</h4><p><code>/t5/user/viewprofilepage/user-id/[username]</code></p></div>
+        <div class="help-card"><h4>👤 User — RSS</h4><p><code>.../[username]/rss-feed-wrapper</code></p></div>
+        <div class="help-card"><h4>📡 OPML Export</h4><p>Compatible with Feedly, Inoreader, NewsBlur, and most RSS readers.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="copied-toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SAP MANAGED TAGS — names taken verbatim from the official
+//  SAP managed tag registry (community.sap.com managed tags)
+// ═══════════════════════════════════════════════════════════
+const SAP_TAGS = [
+  { cat:"☁️ BTP — Platform & Runtime", tags:[
+    "SAP Business Technology Platform",
+    "SAP BTP, ABAP environment",
+    "SAP BTP, Cloud Foundry runtime and environment",
+    "SAP BTP, Kyma runtime",
+    "SAP BTP, serverless runtime",
+    "SAP BTP cockpit",
+    "SAP BTP Security",
+    "SAP Cloud Identity Services",
+    "SAP Identity Authentication",
+    "Identity Provisioning",
+    "SAP Authorization and Trust Management",
+    "SAP Credential Store",
+    "SAP Alert Notification service for SAP BTP",
+    "SAP Connectivity service",
+    "SAP Entitlement Management",
+    "SAP Job Scheduling service",
+    "SAP Key Management Service",
+    "SAP Cloud Logging service",
+    "Object Store on SAP BTP"
+  ]},
+  { cat:"🔗 Integration Suite", tags:[
+    "SAP Integration Suite",
+    "Cloud Integration",
+    "API Management",
+    "SAP Event Mesh",
+    "Open Connectors",
+    "SAP Integration Advisor",
+    "SAP Trading Partner Management",
+    "SAP Business Accelerator Hub",
+    "SAP Process Integration",
+    "SAP Process Orchestration",
+    "SAP Integration Suite, managed gateway for spend management and SAP Business Network",
+    "Event-driven architecture"
+  ]},
+  { cat:"🏗️ SAP Build", tags:[
+    "SAP Build",
+    "SAP Build Apps",
+    "SAP Build Process Automation",
+    "SAP Build Work Zone, standard edition",
+    "SAP Build Work Zone, advanced edition",
+    "SAP Build Code",
+    "SAP Workflow Management",
+    "SAP Task Center",
+    "SAP Forms service by Adobe",
+    "SAP Mobile Services",
+    "SAP Document Management service",
+    "SAP Mobile Start",
+    "SAP Mobile Cards"
+  ]},
+  { cat:"🤖 AI & Joule", tags:[
+    "SAP AI Core",
+    "SAP AI Launchpad",
+    "SAP Generative AI Hub",
+    "SAP AI Services",
+    "SAP Document Information Extraction",
+    "Data Attribute Recommendation",
+    "Business Entity Recognition",
+    "SAP Conversational AI",
+    "SAP Intelligent Robotic Process Automation",
+    "Joule",
+    "Joule Studio",
+    "Agentic AI",
+    "AI Foundation",
+    "Intelligent Scenario Lifecycle Management for SAP S/4HANA"
+  ]},
+  { cat:"📊 Data, Analytics & HANA", tags:[
+    "SAP Datasphere",
+    "SAP Analytics Cloud",
+    "SAP Analytics Cloud for planning",
+    "SAP HANA",
+    "SAP HANA Cloud",
+    "SAP HANA Cloud, SAP HANA database",
+    "SAP HANA Cloud, data lake",
+    "SAP BW/4HANA",
+    "BW (SAP Business Warehouse)",
+    "SAP Data Intelligence",
+    "SAP Data Services",
+    "SAP Master Data Governance",
+    "SAP Business Data Cloud",
+    "SAP Information Steward",
+    "SAP Databricks",
+    "SAP Analytics Hub",
+    "SAP Predictive Analytics",
+    "SAP Lumira"
+  ]},
+  { cat:"🧩 Application Development", tags:[
+    "SAP Cloud Application Programming Model",
+    "SAP Business Application Studio",
+    "SAP Fiori",
+    "SAP Fiori Elements",
+    "SAPUI5",
+    "SAP Fiori tools",
+    "SAP Fiori Launchpad",
+    "ABAP Development",
+    "ABAP Cloud",
+    "ABAP Connectivity",
+    "ABAP Extensibility",
+    "ABAP RESTful Application Programming Model",
+    "ABAP Testing and Analysis",
+    "SAP Cloud SDK",
+    "SAP Web IDE",
+    "Node.js",
+    "Java",
+    "JavaScript",
+    "Python",
+    "OData"
+  ]},
+  { cat:"🏢 S/4HANA & ERP", tags:[
+    "SAP S/4HANA",
+    "SAP S/4HANA Cloud",
+    "SAP S/4HANA Cloud Public Edition",
+    "SAP S/4HANA Cloud Private Edition",
+    "SAP ERP",
+    "SAP ERP Central Component",
+    "SAP Activate",
+    "SAP Business One",
+    "SAP Business ByDesign",
+    "SAP S/4HANA Finance",
+    "SAP S/4HANA Embedded Analytics",
+    "SAP S/4HANA migration cockpit",
+    "SAP Central Business Configuration"
+  ]},
+  { cat:"👥 HCM & SuccessFactors", tags:[
+    "SAP SuccessFactors",
+    "SAP SuccessFactors Employee Central",
+    "SAP SuccessFactors Employee Central Payroll",
+    "SAP SuccessFactors Recruiting",
+    "SAP SuccessFactors Learning",
+    "SAP SuccessFactors Performance & Goals",
+    "SAP SuccessFactors Compensation",
+    "SAP SuccessFactors Workforce Analytics",
+    "SAP SuccessFactors Onboarding",
+    "SAP SuccessFactors Work Zone",
+    "SAP SuccessFactors People Analytics",
+    "SAP SuccessFactors Succession & Development",
+    "SAP Incentive Management"
+  ]},
+  { cat:"🛒 CRM & Customer Experience", tags:[
+    "SAP Sales Cloud",
+    "SAP Sales Cloud Version 2",
+    "SAP Service Cloud",
+    "SAP Service Cloud Version 2",
+    "SAP Commerce Cloud",
+    "SAP Marketing Cloud",
+    "SAP Emarsys",
+    "SAP CPQ",
+    "SAP Field Service Management",
+    "SAP Customer Data Cloud",
+    "SAP Customer Data Platform",
+    "SAP Customer Loyalty"
+  ]},
+  { cat:"💰 Finance & Spend Management", tags:[
+    "SAP Ariba Procurement",
+    "SAP Ariba Sourcing",
+    "SAP Ariba Contracts",
+    "SAP Ariba Invoicing",
+    "SAP Ariba Extensibility",
+    "SAP Ariba Supplier Lifecycle and Performance",
+    "SAP Ariba Spend Analysis",
+    "SAP Concur",
+    "SAP Fieldglass Contingent Workforce Management",
+    "SAP Fieldglass Vendor Management System",
+    "SAP Business Network for Procurement and SAP Business Network for Supply Chain",
+    "SAP Central Invoice Management",
+    "SAP Subscription Billing",
+    "SAP Revenue Accounting and Reporting",
+    "SAP Green Ledger"
+  ]},
+  { cat:"🏭 Supply Chain & Manufacturing", tags:[
+    "SAP Integrated Business Planning",
+    "SAP Integrated Business Planning for demand",
+    "SAP Integrated Business Planning for inventory",
+    "SAP Integrated Business Planning for response and supply",
+    "SAP Extended Warehouse Management",
+    "SAP Transportation Management",
+    "SAP Manufacturing Execution",
+    "SAP Manufacturing Integration and Intelligence",
+    "SAP Asset Intelligence Network",
+    "SAP Asset Performance Management",
+    "SAP Digital Manufacturing",
+    "SAP Supply Chain Management",
+    "SAP Supply Chain Control Tower"
+  ]},
+  { cat:"🔒 Security & Identity", tags:[
+    "SAP Identity Authentication",
+    "Identity Provisioning",
+    "SAP Cloud Identity Access Governance",
+    "SAP Authorization and Trust Management",
+    "SAP Access Control",
+    "Governance, Risk, Compliance (GRC), and Cybersecurity",
+    "SAP Enterprise Threat Detection",
+    "SAP Single Sign-On",
+    "Security"
+  ]},
+  { cat:"🛠️ DevOps, ALM & Architecture", tags:[
+    "SAP Cloud ALM",
+    "SAP Solution Manager",
+    "SAP Focused Run",
+    "SAP LeanIX solutions",
+    "SAP Signavio",
+    "SAP Signavio Process Intelligence",
+    "SAP Signavio Process Manager",
+    "SAP Cloud Transport Management",
+    "SAP Continuous Integration and Delivery",
+    "SAP Readiness Check",
+    "SAP Automation Pilot",
+    "SAP Business Transformation Center"
+  ]},
+  { cat:"⚙️ Basis & NetWeaver", tags:[
+    "ABAP Development",
+    "ABAP Cloud",
+    "SAP NetWeaver",
+    "SAP NetWeaver Application Server",
+    "SAP NetWeaver Application Server for ABAP",
+    "SAP HANA",
+    "SAP HANA Cloud",
+    "SAP Landscape Transformation replication server",
+    "Basis Technology",
+    "Software Logistics"
+  ]},
+  { cat:"🌱 Sustainability", tags:[
+    "SAP Sustainability Control Tower",
+    "SAP Sustainability Footprint Management",
+    "SAP Sustainability Data Exchange",
+    "SAP Sustainability Performance Management",
+    "SAP Green Ledger",
+    "SAP Green Token",
+    "Corporate Social Responsibility"
+  ]},
+  { cat:"🎓 Learning & Community", tags:[
+    "SAP TechEd",
+    "SAP Learning Hub",
+    "SAP CodeJam",
+    "SAP Inside Track",
+    "SAP Community",
+    "SAP Enable Now",
+    "SAP Help Portal",
+    "SAP Sapphire",
+    "SAP Young Thinkers"
+  ]}
+];
+
+// ═══════════════════════════════════════════════════════════
+//  TAG BROWSER
+// ═══════════════════════════════════════════════════════════
+let activeCategory = 'ALL';
+let selectedChipSlug = '';
+
+// Community ID for community.sap.com — used in RSS feed URLs
+const COMMUNITY_ID = 'khhcw49343';
+const BASE_COMMUNITY = `https://community.sap.com/${COMMUNITY_ID}`;
+const BASE_WEB = 'https://community.sap.com';
+
+// Slugify is only used for board/space/qna/user IDs (not tag labels)
+function slugify(str) {
+  return str.trim().toLowerCase()
+    .replace(/\s*[\/&]\s*/g,'-')
+    .replace(/\s+/g,'-')
+    .replace(/[^a-z0-9\-]/g,'')
+    .replace(/-+/g,'-');
+}
+
+// Encode a tag label for use in RSS search URLs (spaces → %20, preserve case)
+function encodeTagLabel(label) {
+  return encodeURIComponent(label.trim());
+}
+
+function buildCategoryFilter() {
+  const row = document.getElementById('catFilterRow');
+  let html = `<span class="cat-pill active" onclick="setCat('ALL',this)">All</span>`;
+  SAP_TAGS.forEach(c => {
+    const emoji = c.cat.split(' ')[0];
+    const name  = c.cat.replace(/^[^\s]+\s/,'');
+    html += `<span class="cat-pill" onclick="setCat('${c.cat}',this)">${emoji} ${name}</span>`;
+  });
+  row.innerHTML = html;
+}
+
+function setCat(cat, el) {
+  activeCategory = cat;
+  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderTagGrid();
+}
+
+function renderTagGrid() {
+  const q = (document.getElementById('tagSearch')?.value||'').toLowerCase().trim();
+  const grid = document.getElementById('tagGrid');
+  let html = '';
+  let total = 0;
+  const cats = activeCategory==='ALL' ? SAP_TAGS : SAP_TAGS.filter(c=>c.cat===activeCategory);
+
+  cats.forEach(cat => {
+    const matched = cat.tags.filter(t => !q || t.toLowerCase().includes(q));
+    if (!matched.length) return;
+    total += matched.length;
+    const chips = matched.map(tag => {
+      const sel = selectedChipSlug===tag ? 'selected' : '';
+      const previewUrl = `${BASE_COMMUNITY}/rss/search?q=tags:${encodeTagLabel(tag)}`;
+      return `<span class="t-chip ${sel}" onclick="prefillTag('${tag.replace(/'/g, "\\'")}');" title="RSS: ${previewUrl}">${tag}</span>`;
+    }).join('');
+    html += `<div class="tag-category-section">
+      <div class="tag-cat-header">${cat.cat}<span class="cat-count">${matched.length}</span></div>
+      <div class="tag-chip-row">${chips}</div>
+    </div>`;
+  });
+
+  grid.innerHTML = html || `<div class="no-results">No tags match "<strong>${q}</strong>"</div>`;
+  document.getElementById('tagCountBadge').textContent = `${total} tag${total!==1?'s':''} shown`;
+}
+
+function filterTags() { renderTagGrid(); }
+function clearTagSearch() { document.getElementById('tagSearch').value=''; renderTagGrid(); }
+function clearChipSelection() { selectedChipSlug=''; document.querySelectorAll('.t-chip').forEach(c=>c.classList.remove('selected')); }
+
+function prefillTag(label) {
+  selectedChipSlug = label; // track by original label, not slug
+  document.getElementById('feedType').value = 'tag';
+  onTypeChange();
+  document.getElementById('feedInput').value = label; // store full label name
+  generateURLs();
+  renderTagGrid();
+  document.getElementById('outputCard').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  URL BUILDER
+// ═══════════════════════════════════════════════════════════
+// community.sap.com community ID — required in all RSS feed paths
+const BASE = 'https://community.sap.com/t5';
+
+function buildURLs(type, raw) {
+  if (!raw.trim()) return [];
+
+  // Tags use the full display label (URL-encoded), NOT a hyphenated slug.
+  // Correct format per SAP Community docs:
+  //   RSS:  https://community.sap.com/khhcw49343/rss/search?q=tags:[Tag%20Name]
+  //   Web:  https://community.sap.com/t5/tag/[Tag%20Name]/tg-p
+  const tagEncoded = encodeTagLabel(raw);
+
+  if (type==='tag') return [
+    {
+      label: '🌐 Web — Tag Page',
+      type:  'web',
+      url:   `${BASE}/tag/${tagEncoded}/tg-p`
+    },
+    {
+      label:       '⚠️ RSS — SAP Native (keyword match, imprecise)',
+      type:        'rss',
+      url:         `${BASE_COMMUNITY}/rss/search?q=tags:${tagEncoded}`,
+      warning:     true,
+      warningText: "SAP's native tag RSS uses keyword search, not a strict managed tag filter. Posts may appear that don't have this tag."
+    },
+    {
+      label: '✅ RSS — Accurate: Blog Posts (rss-scn.marianzeis.de)',
+      type:  'rss-accurate',
+      url:   `https://rss-scn.marianzeis.de/api/messages?conversation.style=blog&managedTag.title=${tagEncoded}&feeds.replies=false`,
+      note:  'Uses strict SAP managed tag filtering via the SAP Community API. Tag title must exactly match the SAP managed tag registry.'
+    },
+    {
+      label: '✅ RSS — Accurate: Q&A (rss-scn.marianzeis.de)',
+      type:  'rss-accurate',
+      url:   `https://rss-scn.marianzeis.de/api/messages?conversation.style=qanda&managedTag.title=${tagEncoded}&feeds.replies=false`,
+      note:  'Uses strict SAP managed tag filtering via the SAP Community API. Tag title must exactly match the SAP managed tag registry.'
+    },
+  ];
+
+  if (type==='board') {
+    // raw is "url-slug|board-id|page-suffix" set by the board dropdown
+    // e.g. "application-development-blog-posts|application-developmentblog-board|bg-p"
+    const parts    = raw.includes('|') ? raw.split('|') : [slugify(raw), slugify(raw)+'blog-board', 'bg-p'];
+    const urlSlug  = parts[0];
+    const boardId  = parts[1];
+    const pageSfx  = parts[2] || 'bg-p';
+    return [
+      {label:'🌐 Web — Board Page', type:'web', url:`${BASE}/${urlSlug}/${pageSfx}/${boardId}`},
+      {label:'📡 RSS — Board Feed', type:'rss', url:`${BASE_COMMUNITY}/rss/board?board.id=${boardId}`},
+    ];
+  }
+
+  return [];
+}
+
+let currentURLs = [];
+let savedFeeds  = JSON.parse(localStorage.getItem('sap_rss_saved')||'[]');
+
+function generateURLs() {
+  const type = document.getElementById('feedType').value;
+  const raw  = document.getElementById('feedInput').value;
+  const hint   = document.getElementById('emptyHint');
+  const card   = document.getElementById('outputCard');
+  const cont   = document.getElementById('urlOutputs');
+
+  // For board type the "raw" value comes from the hidden input fed by the dropdown
+  const effectiveRaw = (type === 'board')
+    ? document.getElementById('boardSelect').value
+    : raw;
+  if (!effectiveRaw.trim()) { card.style.display='none'; hint.style.display='block'; return; }
+  currentURLs = buildURLs(type, effectiveRaw);
+  card.style.display='block'; hint.style.display='none';
+
+  // Store URLs in a registry keyed by index so onclick handlers
+  // never embed raw URL strings inside HTML attributes (breaks on & ? = etc.)
+  window._urlRegistry = {};
+
+  cont.innerHTML = currentURLs.map((u, idx) => {
+    window._urlRegistry[idx] = u.url;
+    const isWeb      = u.type === 'web';
+    const isWarning  = u.warning;
+    const isAccurate = u.type === 'rss-accurate';
+    const badgeClass = isWeb ? 'badge-web' : isAccurate ? 'badge-accurate' : isWarning ? 'badge-warn' : 'badge-rss';
+    const badgeLabel = isWeb ? '🌐 Website' : isAccurate ? '✅ RSS — Accurate' : isWarning ? '⚠️ RSS — Native' : '📡 RSS Feed';
+    const warningBar = isWarning && u.warningText
+      ? `<div class="url-warning-bar">⚠️ ${u.warningText}</div>` : '';
+    const noteBar = isAccurate && u.note
+      ? `<div class="url-note-bar">ℹ️ ${u.note}</div>` : '';
+    return `
+    <div class="url-block ${isWarning ? 'url-block-warn' : ''} ${isAccurate ? 'url-block-accurate' : ''}">
+      <div class="url-block-header">
+        <span class="url-type-badge ${badgeClass}">${badgeLabel}</span>
+        <span style="font-size:11px;color:var(--sap-subtle)">${u.label}</span>
+      </div>
+      ${warningBar}${noteBar}
+      <div class="url-block-body">
+        <span class="url-text">${u.url}</span>
+        <div class="url-actions">
+          <button class="btn-icon" title="Copy URL" onclick="copyByIndex(${idx})">📋</button>
+          <button class="btn-icon" title="Open in browser" onclick="openByIndex(${idx})">↗</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+const inputLabels = {
+  tag:   ['Tag Display Name', 'e.g. SAP Integration Suite  — or click a tag below'],
+  board: ['Board', ''],   // board uses dropdown, not text input
+};
+function onTypeChange() {
+  const type = document.getElementById('feedType').value;
+  const [lbl, ph] = inputLabels[type];
+  const input       = document.getElementById('feedInput');
+  const boardSelect = document.getElementById('boardSelect');
+
+  document.getElementById('inputLabel').textContent = lbl;
+
+  if (type === 'board') {
+    // Show the board dropdown; hide the free-text input
+    input.style.display       = 'none';
+    boardSelect.style.display = '';
+    // Trigger generation from whatever is currently selected in the dropdown
+    onBoardSelect();
+  } else {
+    input.style.display       = '';
+    boardSelect.style.display = 'none';
+    input.placeholder         = ph;
+    generateURLs();
+  }
+}
+
+function onBoardSelect() {
+  const val = document.getElementById('boardSelect').value;
+  // Pass the compound value string as the "raw" input so buildURLs can parse it
+  document.getElementById('feedInput').value = val;
+  generateURLs();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  COPY / TOAST
+// ═══════════════════════════════════════════════════════════
+
+// Index-based helpers — avoids embedding raw URLs in onclick attributes
+function copyByIndex(idx) {
+  const url = (window._urlRegistry || {})[idx];
+  if (!url) return;
+  copyURL(url);
+}
+function openByIndex(idx) {
+  const url = (window._urlRegistry || {})[idx];
+  if (!url) return;
+  window.open(url, '_blank');
+}
+
+function copyURL(url) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => toast('URL copied!'))
+      .catch(() => fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+}
+
+// Fallback for browsers/contexts where clipboard API is unavailable
+function fallbackCopy(url) {
+  const ta = document.createElement('textarea');
+  ta.value = url;
+  ta.style.position = 'fixed';
+  ta.style.opacity  = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    toast('URL copied!');
+  } catch(e) {
+    toast('Copy failed — select manually');
+  }
+  document.body.removeChild(ta);
+}
+
+function copyAll() {
+  const text = currentURLs.map(u => `${u.label}:\n${u.url}`).join('\n\n');
+  copyURL(text);
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = '✅ ' + msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SAVED FEEDS
+// ═══════════════════════════════════════════════════════════
+function saveCurrentFeed() {
+  if (!currentURLs.length) return;
+  const slug = document.getElementById('feedInput').value.trim();
+  const type = document.getElementById('feedType').value;
+  if (savedFeeds.some(f=>f.slug===slug&&f.type===type)) { toast('Already saved!'); return; }
+  savedFeeds.push({ id:Date.now(), label:slug, type,
+    slug, urls:currentURLs, saved:new Date().toLocaleDateString() });
+  localStorage.setItem('sap_rss_saved', JSON.stringify(savedFeeds));
+  renderSaved(); toast('Feed saved!');
+}
+
+function renderSaved() {
+  const cont = document.getElementById('savedFeedsContainer');
+  if (!savedFeeds.length) { cont.innerHTML=`<div class="empty-state"><span class="icon">📭</span>No feeds saved yet.</div>`; return; }
+
+  // Build a per-row registry so onclick handlers never embed raw URLs in attributes
+  window._savedRegistry = {};
+  savedFeeds.forEach((f, idx) => {
+    window._savedRegistry[idx] = {
+      rss: (f.urls.find(u => u.type === 'rss-accurate') || f.urls.find(u => u.type === 'rss'))?.url || null,
+      web: f.urls.find(u => u.type === 'web')?.url || null,
+    };
+  });
+
+  cont.innerHTML = `<table class="feed-table"><thead><tr>
+    <th>Slug / Label</th><th>Type</th><th>Saved</th><th>RSS</th><th>Web</th><th></th>
+  </tr></thead><tbody>${savedFeeds.map((f, idx) => {
+    const r = window._savedRegistry[idx];
+    return `<tr>
+      <td><strong>${f.label}</strong></td>
+      <td><span class="pill pill-blue">${f.type}</span></td>
+      <td style="color:var(--sap-subtle);font-size:11px">${f.saved}</td>
+      <td>${r.rss ? `<button class="btn-icon" title="Copy RSS URL" onclick="copySaved(${idx},'rss')">📋</button> <button class="btn-icon" title="Open RSS" onclick="openSaved(${idx},'rss')">↗</button>` : '—'}</td>
+      <td>${r.web ? `<button class="btn-icon" title="Open web page" onclick="openSaved(${idx},'web')">🌐</button>` : '—'}</td>
+      <td><button class="btn-icon" onclick="deleteFeed(${f.id})">🗑️</button></td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function copySaved(idx, type) {
+  const url = (window._savedRegistry || {})[idx]?.[type];
+  if (url) copyURL(url);
+}
+function openSaved(idx, type) {
+  const url = (window._savedRegistry || {})[idx]?.[type];
+  if (url) window.open(url, '_blank');
+}
+
+function deleteFeed(id) { savedFeeds=savedFeeds.filter(f=>f.id!==id); localStorage.setItem('sap_rss_saved',JSON.stringify(savedFeeds)); renderSaved(); }
+function clearSaved() { if(!confirm('Clear all saved feeds?')) return; savedFeeds=[]; localStorage.setItem('sap_rss_saved','[]'); renderSaved(); }
+
+// ═══════════════════════════════════════════════════════════
+//  EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════
+function download(content,filename,mime) { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type:mime})); a.download=filename; a.click(); }
+function exportJSON() { download(JSON.stringify(savedFeeds,null,2),'sap-community-feeds.json','application/json'); }
+function exportCSV() {
+  const rows=[['Label','Type','Web URL','RSS URL','Saved']];
+  savedFeeds.forEach(f=>rows.push([f.label,f.type,f.urls.find(u=>u.type==='web')?.url||'',f.urls.find(u=>u.type==='rss')?.url||'',f.saved]));
+  download(rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n'),'sap-community-feeds.csv','text/csv');
+}
+function exportOPML() {
+  const items=savedFeeds.map(f=>`    <outline type="rss" text="${f.label}" xmlUrl="${f.urls.find(u=>u.type==='rss')?.url||''}" htmlUrl="${f.urls.find(u=>u.type==='web')?.url||''}"/>`).join('\n');
+  download(`<?xml version="1.0" encoding="UTF-8"?>\n<opml version="1.0">\n  <head><title>SAP Community Feeds</title></head>\n  <body>\n${items}\n  </body>\n</opml>`,'sap-community-feeds.opml','text/xml');
+}
+function exportMarkdown() {
+  let md='# SAP Community Feeds\n\n';
+  savedFeeds.forEach(f=>{ md+=`## ${f.label} (${f.type})\n- **Web**: ${f.urls.find(u=>u.type==='web')?.url||''}\n- **RSS**: ${f.urls.find(u=>u.type==='rss')?.url||''}\n\n`; });
+  download(md,'sap-community-feeds.md','text/markdown');
+}
+function importJSON() {
+  try {
+    const data=JSON.parse(document.getElementById('importInput').value.trim());
+    if(!Array.isArray(data)) throw 0;
+    savedFeeds=[...savedFeeds,...data.filter(f=>f.id&&f.label)];
+    localStorage.setItem('sap_rss_saved',JSON.stringify(savedFeeds));
+    renderSaved(); toast('Feeds imported!');
+    document.getElementById('importInput').value='';
+  } catch { alert('Invalid JSON — paste a valid exported feed list.'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════
+function switchTab(name,btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+buildCategoryFilter();
+renderTagGrid();
+renderSaved();
+</script>
+</body>
+</html>
